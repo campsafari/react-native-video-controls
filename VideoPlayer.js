@@ -33,6 +33,7 @@ export default class VideoPlayer extends Component {
             rate: this.props.rate || 1,
             // Controls
             isFullscreen: isFullscreen,
+            fullscreenToggle: this.props.fullscreenToggle || 'true',
             showTimeRemaining: true,
             volumeTrackWidth: 0,
             lastScreenPress: 0,
@@ -48,6 +49,7 @@ export default class VideoPlayer extends Component {
             currentTime: 0,
             error: false,
             duration: 0,
+
         };
 
         /**
@@ -842,6 +844,9 @@ export default class VideoPlayer extends Component {
      * Render fullscreen toggle and set icon based on the fullscreen state.
      */
     renderFullscreen() {
+
+        if (this.state.fullscreenToggle === false) return null;
+
         let source = this.state.isFullscreen === true ? require( './assets/img/shrink.png' ) : require( './assets/img/expand.png' );
         return this.renderControl(
             <Image source={ source } />,
