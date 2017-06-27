@@ -447,18 +447,21 @@ export default class VideoPlayer extends Component {
      * @return {string} formatted time string in mm:ss format
      */
     formatTime( time = 0 ) {
+
         const symbol = this.state.showRemainingTime ? '-' : '';
-        time = Math.min(
-            Math.max( time, 0 ),
-            this.state.duration
-        );
-        const minutes = time / 60;
-        const seconds = time % 60;
+        const hours = Math.floor(time / 60 / 60);
+        const minutes = Math.floor((time / 60) % 60);
+        const seconds = Math.floor(time % 60);
+        const formattedHours = _.padStart( hours, 2, 0 );
+        const formattedMinutes = _.padStart( minutes, 2, 0 );
+        const formattedSeconds = _.padStart( seconds, 2 , 0 );
 
-        const formattedMinutes = _.padStart( minutes.toFixed( 0 ), 2, 0 );
-        const formattedSeconds = _.padStart( seconds.toFixed( 0 ), 2 , 0 );
+        if (hours < 1){
+            return `${ symbol }${ formattedMinutes }:${ formattedSeconds }`;
+        } else {
+            return `${ symbol }${ formattedHours }:${ formattedMinutes }:${ formattedSeconds }`;
+        }
 
-        return `${ symbol }${ formattedMinutes }:${ formattedSeconds }`;
     }
 
     /**
