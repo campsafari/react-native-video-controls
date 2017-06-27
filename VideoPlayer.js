@@ -33,7 +33,7 @@ export default class VideoPlayer extends Component {
             rate: this.props.rate || 1,
             // Controls
             isFullscreen: isFullscreen,
-            fullscreenToggle: this.props.fullscreenToggle || 'true',
+            fullscreenToggle: (this.props.fullscreenToggle === false) ? false : true,
             showTimeRemaining: true,
             volumeTrackWidth: 0,
             lastScreenPress: 0,
