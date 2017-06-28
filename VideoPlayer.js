@@ -12,6 +12,7 @@ import {
     View,
     Text,
     Slider,
+    Platform,
 } from 'react-native';
 import _ from 'lodash';
 
@@ -25,6 +26,7 @@ export default class VideoPlayer extends Component {
         playInBackground: false,
         repeat: false,
         title: '',
+        thumbImage: require('./assets/img/thumb.png'),
     };
 
     constructor( props ) {
@@ -348,7 +350,6 @@ export default class VideoPlayer extends Component {
         let state = this.state;
         state.showControls = false;
         this.hideControlAnimation();
-
         this.setState( state );
     }
 
@@ -378,20 +379,19 @@ export default class VideoPlayer extends Component {
      * isFullscreen state.
      */
     _toggleFullscreen() {
-        let state = this.state;
-        state.isFullscreen = ! state.isFullscreen;
-        state.resizeMode = state.isFullscreen === true ? 'cover' : 'contain';
-
-        this.setState( state );
+        this.setState( {
+            isFullscreen: !this.state.isFullscreen,
+            resizeMode: this.state.isFullscreen === true ? 'cover' : 'contain',
+        });
     }
 
     /**
      * Toggle playing state on <Video> component
      */
     _togglePlayPause() {
-        let state = this.state;
-        state.paused = ! state.paused;
-        this.setState( state );
+        this.setState( {
+            paused: !this.state.paused,
+        });
     }
 
     /**
@@ -399,9 +399,9 @@ export default class VideoPlayer extends Component {
      * video duration in the timer control
      */
     _toggleTimer() {
-        let state = this.state;
-        state.showTimeRemaining = ! state.showTimeRemaining;
-        this.setState( state );
+        this.setState( {
+            showTimeRemaining: !this.state.showTimeRemaining,
+        } );
     }
 
     /**
@@ -439,17 +439,18 @@ export default class VideoPlayer extends Component {
      */
     formatTime( time = 0 ) {
         const symbol = this.state.showRemainingTime ? '-' : '';
-        time = Math.min(
-            Math.max( time, 0 ),
-            this.state.duration
-        );
-        const minutes = time / 60;
-        const seconds = time % 60;
+        const hours = Math.floor(time / 60 / 60);
+        const minutes = Math.floor((time / 60) % 60);
+        const seconds = Math.floor(time % 60);
+        const formattedHours = _.padStart( hours, 2, 0 );
+        const formattedMinutes = _.padStart( minutes, 2, 0 );
+        const formattedSeconds = _.padStart( seconds, 2 , 0 );
 
-        const formattedMinutes = _.padStart( minutes.toFixed( 0 ), 2, 0 );
-        const formattedSeconds = _.padStart( seconds.toFixed( 0 ), 2 , 0 );
-
-        return `${ symbol }${ formattedMinutes }:${ formattedSeconds }`;
+        if (hours < 1){
+            return `${ symbol }${ formattedMinutes }:${ formattedSeconds }`;
+        } else {
+            return `${ symbol }${ formattedHours }:${ formattedMinutes }:${ formattedSeconds }`;
+        }
     }
 
 
@@ -798,7 +799,6 @@ export default class VideoPlayer extends Component {
     renderSeekbar() {
 
         const {maxTrackColor, minTrackColor} = this.props;
-
         return (
             <Slider
                 style={styles.seekbar}
@@ -807,6 +807,7 @@ export default class VideoPlayer extends Component {
                 minimumTrackTintColor={minTrackColor}
                 maximumTrackTintColor={maxTrackColor}
                 maximumValue={this.state.duration}
+                thumbImage={this.props.thumbImage}
                 value={this.state.currentTime}
                 onValueChange={this.onSeekSliding}
                 onSlidingComplete={this.onSeekSlidingComplete}
@@ -961,7 +962,6 @@ const styles = {
     }),
 
     seekbar: {
-        width:'100%',
         marginTop: 16,
     },
 
