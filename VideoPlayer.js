@@ -27,6 +27,8 @@ export default class VideoPlayer extends Component {
         repeat: false,
         title: '',
         thumbImage: require('./assets/img/thumb.png'),
+        playIcon: require( './assets/img/play.png' ),
+        pauseIcon: require( './assets/img/pause.png' ),
     };
 
     constructor( props ) {
@@ -818,7 +820,7 @@ export default class VideoPlayer extends Component {
      * Render the play/pause button and show the respective icon
      */
     renderPlayPause() {
-        let source = this.state.paused === true ? require( './assets/img/play.png' ) : require( './assets/img/pause.png' );
+        let source = this.state.paused === true ? this.props.playIcon : this.props.pauseIcon;
         return this.renderControl(
             <Image source={ source } />,
             this.methods.togglePlayPause,
