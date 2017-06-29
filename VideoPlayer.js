@@ -27,8 +27,13 @@ export default class VideoPlayer extends Component {
         repeat: false,
         title: '',
         thumbImage: require('./assets/img/thumb.png'),
-        playIcon: require( './assets/img/play.png' ),
-        pauseIcon: require( './assets/img/pause.png' ),
+        playIcon: <Image source={ require( './assets/img/play.png' ) } />,
+        pauseIcon: <Image source={ require( './assets/img/pause.png' ) } />,
+        volumeIcon: <Image source={ require( './assets/img/volume.png' ) } />,
+        volumeMutedIcon: <Image source={ require( './assets/img/volume.png' ) } />,
+        shrinkIcon: <Image source={ require( './assets/img/shrink.png' ) } />,
+        expandIcon: <Image source={ require( './assets/img/expand.png' ) } />,
+        backIcon: <Image source={ require( './assets/img/back.png' ) } />,
     };
 
     constructor( props ) {
@@ -50,12 +55,8 @@ export default class VideoPlayer extends Component {
             isFullscreen: isFullscreen,
             fullscreenToggle: (this.props.fullscreenToggle === false) ? false : true,
             showTimeRemaining: true,
-            volumeTrackWidth: 0,
             lastScreenPress: 0,
-            volumeFillWidth: 0,
             showControls: true,
-            volumePosition: 0,
-            volumeOffset: 0,
             seeking: false,
             loading: false,
             currentTime: 0,
@@ -226,7 +227,6 @@ export default class VideoPlayer extends Component {
 
         this.setState( state );
     }
-
 
 
     /*------------------------------------------------------
@@ -456,11 +456,21 @@ export default class VideoPlayer extends Component {
     }
 
 
-    /**
-     *
-     * handler for seek slider sliding
-     * @param {number}
-     */
+    onVolumeSliding = (value) => {
+        this.setState({
+            volume: value,
+            muted: value <= 0,
+        });
+    }
+
+    onVolumeSlidingComplete = (value) => {
+        this.setState({
+            volume: value,
+            muted: value <= 0,
+        });
+        console.log(value)
+    }
+
     onSeekSliding = (value) => {
         this.setState({
             currentTime: value,
@@ -469,11 +479,6 @@ export default class VideoPlayer extends Component {
         this.player.ref.seek( value );
     }
 
-    /**
-     *
-     * handler for seek slider sliding end
-     * @param {number}
-     */
     onSeekSlidingComplete = (value) => {
         this.setState({
             currentTime: value,
@@ -481,7 +486,6 @@ export default class VideoPlayer extends Component {
         });
         this.player.ref.seek( value );
     }
-
 
     /**
      * Seek to a time in the video.
@@ -495,68 +499,6 @@ export default class VideoPlayer extends Component {
         this.setState( state );
     }
 
-    /**
-     * Set the position of the volume slider
-     *
-     * @param {float} position position of the volume handle in px
-     */
-    setVolumePosition( position = 0 ) {
-        let state = this.state;
-        position = this.constrainToVolumeMinMax( position );
-        state.volumePosition = position + this.player.iconOffset;
-        state.volumeFillWidth = position;
-
-        state.volumeTrackWidth = this.player.volumeWidth - state.volumeFillWidth;
-
-        if ( state.volumeFillWidth < 0 ) {
-            state.volumeFillWidth = 0;
-        }
-
-        if ( state.volumeTrackWidth > 150 ) {
-            state.volumeTrackWidth = 150;
-        }
-
-        this.setState( state );
-    }
-
-    /**
-     * Constrain the volume bar to the min/max of
-     * its track's width.
-     *
-     * @param {float} val position of the volume handle in px
-     * @return {float} contrained position of the volume handle in px
-     */
-    constrainToVolumeMinMax( val = 0 ) {
-        if ( val <= 0 ) {
-            return 0;
-        }
-        else if ( val >= this.player.volumeWidth + 9 ) {
-            return this.player.volumeWidth + 9;
-        }
-        return val;
-    }
-
-    /**
-     * Get the volume based on the position of the
-     * volume object.
-     *
-     * @return {float} volume level based on volume handle position
-     */
-    calculateVolumeFromVolumePosition() {
-        return this.state.volumePosition / this.player.volumeWidth;
-    }
-
-    /**
-     * Get the position of the volume handle based
-     * on the volume
-     *
-     * @return {float} volume handle position in px based on volume
-     */
-    calculateVolumePositionFromVolume() {
-        return this.player.volumeWidth / this.state.volume;
-    }
-
-
 
     /*------------------------------------------------------
      | React Component functions
@@ -568,26 +510,6 @@ export default class VideoPlayer extends Component {
      |
      */
 
-    /**
-     * Before mounting, init our seekbar and volume bar
-     * pan responders.
-     */
-    componentWillMount() {
-        this.initVolumePanResponder();
-    }
-
-    /**
-     * Upon mounting, calculate the position of the volume
-     * bar based on the volume property supplied to it.
-     */
-    componentDidMount() {
-        const position = this.calculateVolumePositionFromVolume();
-        let state = this.state;
-        this.setVolumePosition( position );
-        state.volumeOffset = position;
-
-        this.setState( state );
-    }
 
     /**
      * When the component is about to unmount kill the
@@ -596,53 +518,6 @@ export default class VideoPlayer extends Component {
     componentWillUnmount() {
         this.clearControlTimeout();
     }
-
-
-    /**
-     * Initialize the volume pan responder.
-     */
-    initVolumePanResponder() {
-        this.player.volumePanResponder = PanResponder.create({
-            onStartShouldSetPanResponder: ( evt, gestureState ) => true,
-            onMoveShouldSetPanResponder: ( evt, gestureState ) => true,
-            onPanResponderGrant: ( evt, gestureState ) => {
-                this.clearControlTimeout();
-            },
-
-            /**
-             * Update the volume as we change the position.
-             * If we go to 0 then turn on the mute prop
-             * to avoid that weird static-y sound.
-             */
-            onPanResponderMove: ( evt, gestureState ) => {
-                let state = this.state;
-                const position = this.state.volumeOffset + gestureState.dx;
-
-                this.setVolumePosition( position );
-                state.volume = this.calculateVolumeFromVolumePosition();
-
-                if ( state.volume <= 0 ) {
-                    state.muted = true;
-                }
-                else {
-                    state.muted = false;
-                }
-
-                this.setState( state );
-            },
-
-            /**
-             * Update the offset...
-             */
-            onPanResponderRelease: ( evt, gestureState ) => {
-                let state = this.state;
-                state.volumeOffset = state.volumePosition;
-                this.setControlTimeout();
-                this.setState( state );
-            }
-        });
-    }
-
 
     /*------------------------------------------------------
      | Rendering
@@ -711,10 +586,7 @@ export default class VideoPlayer extends Component {
      */
     renderBack() {
         return this.renderControl(
-            <Image
-                source={ require( './assets/img/back.png' ) }
-                style={ styles.controls.back }
-            />,
+            this.props.backIcon,
             this.methods.onBack,
             styles.controls.back
         );
@@ -724,27 +596,26 @@ export default class VideoPlayer extends Component {
      * Render the volume slider and attach the pan handlers
      */
     renderVolume() {
+
+        const {maxTrackColor, minTrackColor, thumbImage, volumeIcon, volumeMutedIcon} = this.props;
+
+        const icon = this.state.volume > 0 ? volumeIcon : volumeMutedIcon;
+
         return (
             <View style={ styles.volume.container }>
-                <View style={[
-                    styles.volume.fill,
-                    { width: this.state.volumeFillWidth }
-                ]}/>
-                <View style={[
-                    styles.volume.track,
-                    { width: this.state.volumeTrackWidth }
-                ]}/>
-                <View
-                    style={[
-                        styles.volume.handle,
-                        {
-                            left: this.state.volumePosition
-                        }
-                    ]}
-                    { ...this.player.volumePanResponder.panHandlers }
-                >
-                    <Image style={ styles.volume.icon } source={ require( './assets/img/volume.png' ) } />
-                </View>
+                {icon}
+                <Slider
+                    style={ styles.volume.slider }
+                    trackTintColor={ minTrackColor }
+                    thumbTintColor={ minTrackColor }
+                    minimumTrackTintColor={ minTrackColor }
+                    maximumTrackTintColor={ maxTrackColor }
+                    maximumValue={ 1 }
+                    thumbImage={ thumbImage }
+                    value={ this.state.volume }
+                    onValueChange={ this.onVolumeSliding }
+                    onSlidingComplete={ this.onVolumeSlidingComplete }
+                />
             </View>
         );
     }
@@ -755,10 +626,9 @@ export default class VideoPlayer extends Component {
     renderFullscreen() {
 
         if (this.state.fullscreenToggle === false) return null;
-
-        let source = this.state.isFullscreen === true ? require( './assets/img/shrink.png' ) : require( './assets/img/expand.png' );
+        const icon = this.state.isFullscreen === true ? this.props.shrinkIcon : this.props.expandIcon;
         return this.renderControl(
-            <Image source={ source } />,
+            icon,
             this.methods.toggleFullscreen,
             styles.controls.fullscreen
         );
@@ -800,29 +670,31 @@ export default class VideoPlayer extends Component {
      */
     renderSeekbar() {
 
-        const {maxTrackColor, minTrackColor} = this.props;
+        const {maxTrackColor, minTrackColor, thumbImage} = this.props;
         return (
-            <Slider
-                style={styles.seekbar}
-                trackTintColor={minTrackColor}
-                thumbTintColor={minTrackColor}
-                minimumTrackTintColor={minTrackColor}
-                maximumTrackTintColor={maxTrackColor}
-                maximumValue={this.state.duration}
-                thumbImage={this.props.thumbImage}
-                value={this.state.currentTime}
-                onValueChange={this.onSeekSliding}
-                onSlidingComplete={this.onSeekSlidingComplete}
-            />)
+            <View style={ styles.seekbar.container}>
+                <Slider
+                    style={styles.seekbar.slider}
+                    trackTintColor={minTrackColor}
+                    thumbTintColor={minTrackColor}
+                    minimumTrackTintColor={minTrackColor}
+                    maximumTrackTintColor={maxTrackColor}
+                    maximumValue={this.state.duration}
+                    thumbImage={thumbImage}
+                    value={this.state.currentTime}
+                    onValueChange={this.onSeekSliding}
+                    onSlidingComplete={this.onSeekSlidingComplete}
+                />
+            </View>)
     }
 
     /**
      * Render the play/pause button and show the respective icon
      */
     renderPlayPause() {
-        let source = this.state.paused === true ? this.props.playIcon : this.props.pauseIcon;
+        const icon = this.state.paused === true ? this.props.playIcon : this.props.pauseIcon;
         return this.renderControl(
-            <Image source={ source } />,
+            icon,
             this.methods.togglePlayPause,
             styles.controls.playPause
         );
@@ -964,7 +836,25 @@ const styles = {
     }),
 
     seekbar: {
-        marginTop: 16,
+        container: {
+            paddingHorizontal: 12,
+            marginTop: 12,
+        },
+        slider: {
+        }
+    },
+
+    volume: {
+        container : {
+            width: 150,
+            flexDirection: 'row',
+            alignItems:'center'
+        },
+        slider: {
+            flex: 1,
+            marginLeft: 12,
+            marginRight: 12,
+        },
     },
 
     error: StyleSheet.create({
@@ -1039,27 +929,21 @@ const styles = {
             flex: 2,
             justifyContent: 'flex-end',
         },
-
         topControlGroup: {
             alignSelf: 'stretch',
             alignItems: 'center',
             justifyContent: 'space-between',
             flexDirection: 'row',
             width: null,
-            margin: 12,
-            marginBottom: 18,
+            marginTop: 10,
+            marginBottom: 5,
         },
         bottomControlGroup: {
             alignSelf: 'stretch',
             alignItems: 'center',
             justifyContent: 'space-between',
             flexDirection: 'row',
-            marginLeft: 12,
-            marginRight: 12,
             marginBottom: 0,
-        },
-        volume: {
-            flexDirection: 'row',
         },
         fullscreen: {
             flexDirection: 'row',
@@ -1086,30 +970,4 @@ const styles = {
             textAlign: 'right',
         },
     }),
-    volume: StyleSheet.create({
-        container: {
-            alignItems: 'center',
-            justifyContent: 'flex-start',
-            flexDirection: 'row',
-            height: 1,
-            marginLeft: 20,
-            marginRight: 20,
-            width: 150,
-        },
-        track: {
-            backgroundColor: '#333',
-            height: 1,
-            marginLeft: 7,
-        },
-        fill: {
-            backgroundColor: '#FFF',
-            height: 1,
-        },
-        handle: {
-            position: 'absolute',
-            marginTop: -24,
-            marginLeft: -24,
-            padding: 16,
-        }
-    })
 };
