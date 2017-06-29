@@ -68,23 +68,23 @@ export default class VideoPlayer extends Component {
          * Our app listeners and associated methods
          */
         this.events = {
-            onError: this.props.onError || this._onError.bind( this ),
-            onEnd: this.props.onEnd || this._onEnd.bind( this ),
-            onScreenPress: this._onScreenPress.bind( this ),
-            onLoadStart: this._onLoadStart.bind( this ),
-            onProgress: this._onProgress.bind( this ),
-            onLoad: this._onLoad.bind( this ),
+            onError: this.props.onError || this._onError,
+            onEnd: this.props.onEnd || this._onEnd,
+            onScreenPress: this._onScreenPress,
+            onLoadStart: this._onLoadStart,
+            onProgress: this._onProgress,
+            onLoad: this._onLoad,
         };
 
         /**
          * Functions used throughout the application
          */
         this.methods = {
-            onBack: this.props.onBack || this._onBack.bind( this ),
-            toggleFullscreen: this._toggleFullscreen.bind( this ),
-            togglePlayPause: this._togglePlayPause.bind( this ),
-            toggleControls: this._toggleControls.bind( this ),
-            toggleTimer: this._toggleTimer.bind( this ),
+            onBack: this.props.onBack || this._onBack,
+            toggleFullscreen: this._toggleFullscreen,
+            togglePlayPause: this._togglePlayPause,
+            toggleControls: this._toggleControls,
+            toggleTimer: this._toggleTimer,
         };
 
         /**
@@ -92,12 +92,7 @@ export default class VideoPlayer extends Component {
          */
         this.player = {
             controlTimeoutDelay: this.props.controlTimeout || 15000,
-            volumePanResponder: PanResponder,
-            seekPanResponder: PanResponder,
             controlTimeout: null,
-            volumeWidth: 150,
-            iconOffset: 7,
-            seekWidth: 0,
             ref: Video,
         };
 
@@ -147,11 +142,11 @@ export default class VideoPlayer extends Component {
      * When load starts we display a loading icon
      * and show the controls.
      */
-    _onLoadStart() {
-        let state = this.state;
-        state.loading = true;
+    _onLoadStart = () => {
         this.loadAnimation();
-        this.setState( state );
+        this.setState({
+            loading: true,
+        });
     }
 
     /**
@@ -161,14 +156,13 @@ export default class VideoPlayer extends Component {
      *
      * @param {object} data The video meta data
      */
-    _onLoad( data = {} ) {
-        let state = this.state;
+    _onLoad = ( data = {} ) => {
+        this.setState({
+            duration: data.duration,
+            loading: false,
+        });
 
-        state.duration = data.duration;
-        state.loading = false;
-        this.setState( state );
-
-        if ( state.showControls ) {
+        if ( this.state.showControls ) {
             this.setControlTimeout();
         }
     }
@@ -179,9 +173,11 @@ export default class VideoPlayer extends Component {
      *
      * @param {object} data The video meta data
      */
-    _onProgress( data = {} ) {
+    _onProgress = ( data = {} ) => {
         if ( ! this.state.seeking ) {
-            this.setState( {currentTime: data.currentTime} );
+            this.setState({
+                currentTime: data.currentTime
+            });
         }
     }
 
@@ -191,7 +187,7 @@ export default class VideoPlayer extends Component {
      * Either close the video or go to a
      * new page.
      */
-    _onEnd() {}
+    _onEnd = () => {}
 
     /**
      * Set the error state to true which then
@@ -199,12 +195,11 @@ export default class VideoPlayer extends Component {
      *
      * @param {object} err  Err obj returned from <Video> component
      */
-    _onError( err ) {
-        let state = this.state;
-        state.error = true;
-        state.loading = false;
-
-        this.setState( state );
+    _onError = ( err ) => {
+        this.setState({
+            error: true,
+            loading: false,
+        });
     }
 
     /**
@@ -213,7 +208,7 @@ export default class VideoPlayer extends Component {
      * One tap toggles controls, two toggles
      * fullscreen mode.
      */
-    _onScreenPress() {
+    _onScreenPress = () => {
         let state = this.state;
         const time = new Date().getTime();
         const delta =  time - state.lastScreenPress;
@@ -223,9 +218,10 @@ export default class VideoPlayer extends Component {
         }
 
         this.methods.toggleControls();
-        state.lastScreenPress = time;
 
-        this.setState( state );
+        this.setState({
+            lastScreenPress: time
+        });
     }
 
 
@@ -349,17 +345,17 @@ export default class VideoPlayer extends Component {
      * state then calls the animation.
      */
     _hideControls() {
-        let state = this.state;
-        state.showControls = false;
         this.hideControlAnimation();
-        this.setState( state );
+        this.setState({
+            showControls: false
+        });
     }
 
     /**
      * Function to toggle controls based on
      * current state.
      */
-    _toggleControls() {
+    _toggleControls = () => {
         let state = this.state;
         state.showControls = ! state.showControls;
 
@@ -380,8 +376,8 @@ export default class VideoPlayer extends Component {
      * the <Video> component then updates the
      * isFullscreen state.
      */
-    _toggleFullscreen() {
-        this.setState( {
+    _toggleFullscreen = () => {
+        this.setState({
             isFullscreen: !this.state.isFullscreen,
             resizeMode: this.state.isFullscreen === true ? 'cover' : 'contain',
         });
@@ -390,8 +386,8 @@ export default class VideoPlayer extends Component {
     /**
      * Toggle playing state on <Video> component
      */
-    _togglePlayPause() {
-        this.setState( {
+    _togglePlayPause = () => {
+        this.setState({
             paused: !this.state.paused,
         });
     }
@@ -400,10 +396,10 @@ export default class VideoPlayer extends Component {
      * Toggle between showing time remaining or
      * video duration in the timer control
      */
-    _toggleTimer() {
-        this.setState( {
+    _toggleTimer = () => {
+        this.setState({
             showTimeRemaining: !this.state.showTimeRemaining,
-        } );
+        });
     }
 
     /**
@@ -411,7 +407,7 @@ export default class VideoPlayer extends Component {
      * and as such the video player requires a
      * navigator prop by default.
      */
-    _onBack() {
+    _onBack = () => {
         if ( this.props.navigator && this.props.navigator.pop ) {
             this.props.navigator.pop();
         }
@@ -468,7 +464,6 @@ export default class VideoPlayer extends Component {
             volume: value,
             muted: value <= 0,
         });
-        console.log(value)
     }
 
     onSeekSliding = (value) => {
@@ -493,10 +488,10 @@ export default class VideoPlayer extends Component {
      * @param {float} time time to seek to in ms
      */
     seekTo( time = 0 ) {
-        let state = this.state;
-        state.currentTime = time;
         this.player.ref.seek( time );
-        this.setState( state );
+        this.setState({
+            currentTime: time,
+        });
     }
 
 
