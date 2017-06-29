@@ -832,7 +832,7 @@ const styles = {
 
     seekbar: {
         container: {
-            paddingHorizontal: 12,
+            paddingHorizontal: (Platform.OS === 'ios') ? 12 : 10,
             marginTop: 12,
         },
         slider: {
@@ -847,7 +847,8 @@ const styles = {
         },
         slider: {
             flex: 1,
-            marginLeft: 12,
+            padding: 0,
+            marginLeft: (Platform.OS === 'ios') ? 12 : 0,
             marginRight: 12,
         },
     },
